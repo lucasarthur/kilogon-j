@@ -7,11 +7,10 @@ import static java.util.concurrent.ThreadLocalRandom.current;
 import static reactor.core.publisher.Flux.interval;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
-import com.kilogon.kafka.entity.ProduceableEntity;
+import com.kilogon.adapter.AdapterExecution;
+import com.kilogon.kafka.entity.StreamableEntity;
 import com.kilogon.model.Person;
 
 import lombok.RequiredArgsConstructor;
@@ -26,15 +25,15 @@ public class KafkaProducerSample {
   private final ReactiveKafkaProducer<Long, Person> longKeyProducer;
   private final Person person = newPerson();
 
-  @EventListener(ApplicationReadyEvent.class)
+  @AdapterExecution
   public void execution() {
     // with string keys
     stringKeyProducer.with(stringSerializer())
-      .produceOne(stringKeyTopic, person.getUuid(), person).subscribe();
+      .produceOne(stringKeyTopic, person.getStringId(), person).subscribe();
 
     // with long keys
     longKeyProducer.with(longSerializer())
-      .produceOne(longKeyTopic, person.getId(), person).subscribe();
+      .produceOne(longKeyTopic, person.getLongId(), person).subscribe();
 
     // batch producing
     stringKeyProducer.with(stringSerializer())
@@ -45,8 +44,8 @@ public class KafkaProducerSample {
       .subscribe();
   }
 
-  private ProduceableEntity<String, Person> toProduceable(Person person) {
-    return ProduceableEntity.of(stringKeyTopic, person.getUuid(), person, null);
+  private StreamableEntity<String, Person> toProduceable(Person person) {
+    return StreamableEntity.of(stringKeyTopic, person.getStringId(), person, null);
   }
 
   private Person newPerson() {

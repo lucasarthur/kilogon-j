@@ -62,7 +62,7 @@ public class ReactiveKafkaProducer<K, V> implements AutoCloseable, DisposableBea
 
 	private Flux<SenderResult<V>> produce(Publisher<? extends SenderRecord<K, V, V>> records) {
 		return requireNonNull(producer)
-			.send(records)
+      .send(records)
 			.subscribeOn(boundedElastic())
 			.doOnError(e -> log.error(e.getMessage(), e))
 			.retryWhen(max(3l).transientErrors(true));
