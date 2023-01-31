@@ -26,7 +26,7 @@ public class KafkaProducerSample {
   private final ReactiveKafkaProducer<Long, Person> longKeyProducer;
   private final Person person = newPerson();
 
-  @EventListener(ApplicationReadyEvent.class)
+  // @EventListener(ApplicationReadyEvent.class)
   public void execution() {
     // with string keys
     stringKeyProducer.with(stringSerializer())

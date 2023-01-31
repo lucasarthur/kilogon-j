@@ -26,7 +26,7 @@ public class KafkaConsumerSample {
   private final ReactiveKafkaConsumer<Long, Person> longKeyConsumer;
   private final ObjectMapper mapper;
 
-  @EventListener(ApplicationReadyEvent.class)
+  // @EventListener(ApplicationReadyEvent.class)
   public void execution() {
     stringKeyConsumer.with(stringDeserializer(), stringKeyTopic).doOnEach(this::prettyPrint);
     longKeyConsumer.with(longDeserializer(), longKeyTopic).doOnEach(this::prettyPrint);
