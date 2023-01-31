@@ -7,10 +7,9 @@ import static java.util.concurrent.ThreadLocalRandom.current;
 import static reactor.core.publisher.Flux.interval;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import com.kilogon.adapter.AdapterExecution;
 import com.kilogon.kafka.entity.StreamableEntity;
 import com.kilogon.model.Person;
 
@@ -26,7 +25,7 @@ public class KafkaProducerSample {
   private final ReactiveKafkaProducer<Long, Person> longKeyProducer;
   private final Person person = newPerson();
 
-  // @EventListener(ApplicationReadyEvent.class)
+  @AdapterExecution
   public void execution() {
     // with string keys
     stringKeyProducer.with(stringSerializer())

@@ -1,10 +1,8 @@
 package com.kilogon.adapter;
 
-import static java.util.concurrent.ThreadLocalRandom.current;
 import static java.lang.String.format;
+import static java.util.concurrent.ThreadLocalRandom.current;
 
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
@@ -16,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AdapterSample {
   private final Adapter<Long, String> adapter;
 
-  // @EventListener(ApplicationReadyEvent.class)
+  @AdapterExecution
   public void execution() {
     adapter.from(() -> current().nextLong())
       .to(log::info)

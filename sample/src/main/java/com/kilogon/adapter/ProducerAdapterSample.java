@@ -8,8 +8,6 @@ import static reactor.core.publisher.Flux.interval;
 import static reactor.core.scheduler.Schedulers.boundedElastic;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import com.kilogon.adapter.reactive.ReactiveAdapter;
@@ -27,7 +25,7 @@ public class ProducerAdapterSample {
 
   @Value("${spring.kafka.string-key-person-topic}") private String topic;
 
-  // @EventListener(ApplicationReadyEvent.class)
+  @AdapterExecution
   public void execution() {
     adapter.from(() -> interval(ofSeconds(2L)))
       .to(producer(producer.with(stringSerializer())))
