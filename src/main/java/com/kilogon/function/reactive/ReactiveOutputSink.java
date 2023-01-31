@@ -16,7 +16,7 @@ public interface ReactiveOutputSink<T> {
     return stream -> outflow(stream).then(requireNonNull(after).outflow(stream));
   }
 
-  static <K, V> ReactiveOutputSink<StreamableEntity<K, V>> toProducer(ReactiveKafkaProducer<K, V> producer) {
+  static <K, V> ReactiveOutputSink<StreamableEntity<K, V>> producer(ReactiveKafkaProducer<K, V> producer) {
     return stream -> producer.produceMany(stream).then();
   }
 }

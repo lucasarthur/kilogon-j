@@ -2,10 +2,8 @@ package com.kilogon.kafka;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
-import static reactor.core.publisher.Mono.empty;
-import static reactor.core.scheduler.Schedulers.boundedElastic;
-import static reactor.util.retry.Retry.max;
 import static java.util.function.Function.identity;
+import static reactor.core.scheduler.Schedulers.boundedElastic;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
@@ -27,7 +25,7 @@ import reactor.kafka.receiver.KafkaReceiver;
 @RequiredArgsConstructor
 @Slf4j
 public class ReactiveKafkaConsumer<K, V> implements AutoCloseable, DisposableBean {
-  private final AtomicBoolean canceled = new AtomicBoolean(false);
+  private final AtomicBoolean consuming = new AtomicBoolean(true);
   private final KafkaUtils utils;
   private KafkaReceiver<K, V> consumer;
 
@@ -47,19 +45,17 @@ public class ReactiveKafkaConsumer<K, V> implements AutoCloseable, DisposableBea
   public Flux<StreamableEntity<K, V>> consume() {
     return requireNonNull(consumer)
       .receive()
-      .takeUntil($ -> canceled.get())
       .subscribeOn(boundedElastic())
       .map(utils::ack)
       .map(StreamableEntity::of)
       .doOnError($ -> log.error($.getMessage(), $))
-      .retryWhen(max(3l).transientErrors(true))
-      .onErrorResume($ -> empty())
-      .repeat();
+      .onErrorComplete()
+      .repeat(consuming::get);
   }
 
   public void stop() {
     if (!isNull(consumer)) {
-      canceled.compareAndSet(false, true);
+      consuming.compareAndSet(true, false);
       consumer = null;
     }
   }

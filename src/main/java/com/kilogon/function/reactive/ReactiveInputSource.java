@@ -13,7 +13,7 @@ public interface ReactiveInputSource<T> extends Supplier<Flux<T>> {
 
   default Flux<T> get() { return feed(); }
 
-  static <K, V> ReactiveInputSource<StreamableEntity<K, V>> fromConsumer(ReactiveKafkaConsumer<K, V> consumer) {
+  static <K, V> ReactiveInputSource<StreamableEntity<K, V>> consumer(ReactiveKafkaConsumer<K, V> consumer) {
     return consumer::consume;
   }
 }
