@@ -24,7 +24,7 @@ public class ReactiveAdapterSample {
   // @EventListener(ApplicationReadyEvent.class)
   public void execution() {
     adapter.from(() -> interval(ofMillis(250L)).map(l -> current().nextLong()))
-      .to(stream -> stream.doOnNext(log::info).then())
+      .onEachTo(log::info)
       .mappedBy(l -> format("Just generated a number: %d", l))
       .adaptAndSubscribeOn(boundedElastic());
   }
