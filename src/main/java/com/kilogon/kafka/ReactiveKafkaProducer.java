@@ -1,7 +1,7 @@
 package com.kilogon.kafka;
 
-import static java.util.Objects.requireNonNull;
 import static java.util.Objects.isNull;
+import static java.util.Objects.requireNonNull;
 import static reactor.core.publisher.Mono.just;
 import static reactor.core.scheduler.Schedulers.boundedElastic;
 import static reactor.kafka.sender.SenderRecord.create;
@@ -9,9 +9,7 @@ import static reactor.util.retry.Retry.max;
 
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.header.Headers;
-import org.apache.kafka.common.serialization.LongSerializer;
 import org.apache.kafka.common.serialization.Serializer;
-import org.apache.kafka.common.serialization.StringSerializer;
 import org.reactivestreams.Publisher;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.stereotype.Component;
@@ -35,7 +33,7 @@ public class ReactiveKafkaProducer<K, V> implements AutoCloseable, DisposableBea
   private KafkaSender<K, V> producer;
 
 	public ReactiveKafkaProducer<K, V> with(Serializer<K> keySerializer) {
-		if (isNull(producer)) producer = utils.producer(keySerializer);
+		producer = utils.producer(keySerializer);
 		return this;
 	}
 
@@ -78,7 +76,4 @@ public class ReactiveKafkaProducer<K, V> implements AutoCloseable, DisposableBea
 
 	@Override public void destroy() { _close(); }
 	@Override public void close() { _close(); }
-
-	public Serializer<String> stringKeys() { return new StringSerializer(); }
-	public Serializer<Long> longKeys() { return new LongSerializer(); }
 }

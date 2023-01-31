@@ -1,7 +1,7 @@
 package com.kilogon.kafka;
 
-import static java.util.Objects.requireNonNull;
 import static java.util.Objects.isNull;
+import static java.util.Objects.requireNonNull;
 import static reactor.core.publisher.Mono.empty;
 import static reactor.core.scheduler.Schedulers.boundedElastic;
 import static reactor.util.retry.Retry.max;
@@ -10,8 +10,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import org.apache.kafka.common.serialization.Deserializer;
-import org.apache.kafka.common.serialization.LongDeserializer;
-import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.stereotype.Component;
 
@@ -32,7 +30,7 @@ public class ReactiveKafkaConsumer<K, V> implements AutoCloseable, DisposableBea
   private KafkaReceiver<K, V> consumer;
 
   public ReactiveKafkaConsumer<K, V> with(Deserializer<K> keyDeserializer, String... topics) {
-		if (isNull(consumer)) consumer = utils.consumer(keyDeserializer, topics);
+		consumer = utils.consumer(keyDeserializer, topics);
 		return this;
 	}
 
@@ -62,7 +60,4 @@ public class ReactiveKafkaConsumer<K, V> implements AutoCloseable, DisposableBea
 
 	@Override public void destroy() { stop(); }
 	@Override public void close() { stop(); }
-
-  public Deserializer<String> stringKeys() { return new StringDeserializer(); }
-	public Deserializer<Long> longKeys() { return new LongDeserializer(); }
 }
