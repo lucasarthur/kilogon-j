@@ -28,12 +28,12 @@ public class KafkaConsumerSample {
 
   @EventListener(ApplicationReadyEvent.class)
   public void execution() {
-    stringKeyConsumer.with(stringDeserializer(), stringKeyTopic).doOnEach($ -> log.info("{}", pretty($)));
-    longKeyConsumer.with(longDeserializer(), longKeyTopic).doOnEach($ -> log.info("{}", pretty($)));
+    stringKeyConsumer.with(stringDeserializer(), stringKeyTopic).doOnEach(this::prettyPrint);
+    longKeyConsumer.with(longDeserializer(), longKeyTopic).doOnEach(this::prettyPrint);
   }
 
   @SneakyThrows
-  public <V> String pretty(V value) {
-    return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(value);
+  public <V> void prettyPrint(V value) {
+    log.info("{}", mapper.writerWithDefaultPrettyPrinter().writeValueAsString(value));
   }
 }

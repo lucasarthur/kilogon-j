@@ -18,8 +18,8 @@ import lombok.experimental.Accessors;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Person {
-  @Builder.Default private String uuid = randomUUID().toString();
-  @Builder.Default private Long id = current().nextLong();
+  @Builder.Default private String stringId = randomUUID().toString();
+  @Builder.Default private Long longId = current().nextLong();
   private String name;
   private Integer age;
   @Builder.Default private Boolean alive = true;

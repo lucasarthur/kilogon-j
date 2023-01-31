@@ -1,0 +1,8 @@
+version: '3'
+services:
+  redpanda:
+    image: vectorized/redpanda:latest
+    container_name: redpanda
+    hostname: redpanda
+    ports:
+      - 9092:9092
