@@ -14,18 +14,18 @@ import reactor.kafka.receiver.ReceiverRecord;
 @Accessors(chain = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class ConsumableEntity<K, V> {
+public class StreamableEntity<K, V> {
   private String topic;
   private K key;
   private V value;
   private Headers headers;
 
-  public static <K, V> ConsumableEntity<K, V> of(String topic, K key, V value, Headers headers) {
-    return ConsumableEntity.<K, V>builder().topic(topic).key(key).value(value).headers(headers).build();
+  public static <K, V> StreamableEntity<K, V> of(String topic, K key, V value, Headers headers) {
+    return StreamableEntity.<K, V>builder().topic(topic).key(key).value(value).headers(headers).build();
   }
 
-  public static <K, V> ConsumableEntity<K, V> of(ReceiverRecord<K, V> record) {
-    return ConsumableEntity.<K, V>builder()
+  public static <K, V> StreamableEntity<K, V> of(ReceiverRecord<K, V> record) {
+    return StreamableEntity.<K, V>builder()
       .topic(record.topic())
       .key(record.key())
       .value(record.value())

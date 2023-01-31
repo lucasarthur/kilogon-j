@@ -5,15 +5,17 @@ import static java.util.Objects.requireNonNull;
 import static reactor.core.publisher.Mono.empty;
 import static reactor.core.scheduler.Schedulers.boundedElastic;
 import static reactor.util.retry.Retry.max;
+import static java.util.function.Function.identity;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import org.apache.kafka.common.serialization.Deserializer;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.stereotype.Component;
 
-import com.kilogon.kafka.entity.ConsumableEntity;
+import com.kilogon.kafka.entity.StreamableEntity;
 import com.kilogon.kafka.util.KafkaUtils;
 
 import lombok.RequiredArgsConstructor;
@@ -34,17 +36,21 @@ public class ReactiveKafkaConsumer<K, V> implements AutoCloseable, DisposableBea
 		return this;
 	}
 
-  public void doOnEach(Consumer<ConsumableEntity<K, V>> action) {
-    consume().doOnNext(action).subscribe();
+  public void doOnEach(Consumer<StreamableEntity<K, V>> action) {
+    mappingAndThen(identity(), action);
   }
 
-  public Flux<ConsumableEntity<K, V>> consume() {
+  public <R> void mappingAndThen(Function<StreamableEntity<K, V>, R> mapper, Consumer<R> action) {
+    consume().map(mapper).doOnNext(action).subscribe();
+  }
+
+  public Flux<StreamableEntity<K, V>> consume() {
     return requireNonNull(consumer)
       .receive()
       .takeUntil($ -> canceled.get())
       .subscribeOn(boundedElastic())
       .map(utils::ack)
-      .map(ConsumableEntity::of)
+      .map(StreamableEntity::of)
       .doOnError($ -> log.error($.getMessage(), $))
       .retryWhen(max(3l).transientErrors(true))
       .onErrorResume($ -> empty())
