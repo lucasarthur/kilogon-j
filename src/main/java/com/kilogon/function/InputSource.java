@@ -6,7 +6,5 @@ import java.util.function.Supplier;
 public interface InputSource<T> extends Supplier<T> {
   T feed();
 
-  default T get() {
-    return feed();
-  }
+  default T get() { return feed(); }
 }

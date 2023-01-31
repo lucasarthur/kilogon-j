@@ -6,13 +6,11 @@ import java.util.function.Consumer;
 
 @FunctionalInterface
 public interface OutputSink<T> extends Consumer<T> {
-  void outflow(T t);
+  void outflow(T element);
 
-  default void accept(T t) {
-    outflow(t);
-  }
+  default void accept(T element) { outflow(element); }
 
   default OutputSink<T> andThen(OutputSink<? super T> after) {
-    return t -> { outflow(t); requireNonNull(after).outflow(t); };
+    return element -> { outflow(element); requireNonNull(after).outflow(element); };
   }
 }
