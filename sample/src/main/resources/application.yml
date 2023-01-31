@@ -19,24 +19,6 @@ spring:
     long-key-person-topic: LongPersonTopic
     bootstrap-servers: localhost:9092
     consumer:
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
       enable-auto-commit: true
       group-id: kilogon-consumer-group
       auto-offset-reset: earliest
-      properties:
-        spring:
-          deserializer:
-            value:
-              delegate:
-                class: org.springframework.kafka.support.serializer.JsonDeserializer
-              default: null
-          json:
-            use:
-              type:
-                headers: false
-            value:
-              default:
-                type: java.util.Map
-            trusted:
-              packages: "*"
