@@ -1,5 +1,6 @@
 package com.kilogon.kafka;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
 import static reactor.core.publisher.Mono.just;
 import static reactor.core.scheduler.Schedulers.boundedElastic;
@@ -66,7 +67,13 @@ public class ReactiveKafkaProducer<K, V> implements AutoCloseable, DisposableBea
 			.retryWhen(max(3l).transientErrors(true));
 	}
 
-	@Override public void destroy() { doClose(); }
-	@Override public void close() { doClose(); }
-	private void doClose() { producer.close(); }
+	private void _close() {
+		if (!isNull(producer)) {
+			producer.close();
+			producer = null;
+		}
+	}
+
+	@Override public void destroy() { _close(); }
+	@Override public void close() { _close(); }
 }
