@@ -1,11 +1,12 @@
 package com.kilogon.kafka;
 
+import static com.kilogon.kafka.util.KafkaUtils.longSerializer;
+import static com.kilogon.kafka.util.KafkaUtils.stringSerializer;
+import static java.time.Duration.ofMillis;
 import static java.util.concurrent.ThreadLocalRandom.current;
+import static reactor.core.publisher.Flux.interval;
 
-import java.time.Duration;
-
-import org.apache.kafka.common.serialization.LongSerializer;
-import org.apache.kafka.common.serialization.StringSerializer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -14,27 +15,45 @@ import com.kilogon.kafka.entity.ProduceableEntity;
 import com.kilogon.model.Person;
 
 import lombok.RequiredArgsConstructor;
-import reactor.core.publisher.Flux;
 
 @Component
 @RequiredArgsConstructor
 public class KafkaProducerSample {
-  private static final String PERSON_TOPIC = "PersonTopic";
-  private static final Person PERSON = Person.of("Lucas", 21);
+  @Value("${spring.kafka.string-key-person-topic}") private String stringKeyTopic;
+  @Value("${spring.kafka.long-key-person-topic}") private String longKeyTopic;
 
   private final ReactiveKafkaProducer<String, Person> stringKeyProducer;
   private final ReactiveKafkaProducer<Long, Person> longKeyProducer;
+  private final Person person = newPerson();
 
   @EventListener(ApplicationReadyEvent.class)
   public void execution() {
-    stringKeyProducer.with(new StringSerializer()).produceOne(PERSON_TOPIC, PERSON.getUuid(), PERSON).subscribe();
-    longKeyProducer.with(new LongSerializer()).produceOne(PERSON_TOPIC, PERSON.getId(), PERSON).subscribe();
+    // with string keys
+    stringKeyProducer.with(stringSerializer())
+      .produceOne(stringKeyTopic, person.getUuid(), person).subscribe();
+
+    // with long keys
+    longKeyProducer.with(longSerializer())
+      .produceOne(longKeyTopic, person.getId(), person).subscribe();
 
     // batch producing
-    stringKeyProducer.with(new StringSerializer()).produceMany(Flux.interval(Duration.ofMillis(50L))
-        .map(l -> Person.of("Lucas", current().nextInt(18, 65)))
-        .map(person -> ProduceableEntity.of(PERSON_TOPIC, person.getUuid(), person, null))
+    stringKeyProducer.with(stringSerializer())
+      .produceMany(interval(ofMillis(50L))
+        .map(l -> newPerson())
+        .map(this::toProduceable)
         .take(10L))
       .subscribe();
+  }
+
+  private ProduceableEntity<String, Person> toProduceable(Person person) {
+    return ProduceableEntity.of(stringKeyTopic, person.getUuid(), person, null);
+  }
+
+  private Person newPerson() {
+    return Person.of("Lucas", randomAge());
+  }
+
+  private Integer randomAge() {
+    return current().nextInt(18, 65);
   }
 }
