@@ -14,7 +14,7 @@ import org.reactivestreams.Publisher;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.stereotype.Component;
 
-import com.kilogon.kafka.entity.ProduceableEntity;
+import com.kilogon.kafka.entity.StreamableEntity;
 import com.kilogon.kafka.util.KafkaUtils;
 
 import lombok.RequiredArgsConstructor;
@@ -46,14 +46,14 @@ public class ReactiveKafkaProducer<K, V> implements AutoCloseable, DisposableBea
 	}
 
 	public Mono<SenderResult<V>> produceOne(String topic, K key, V value, Headers headers) {
-		return produceOne(just(ProduceableEntity.of(topic, key, value, headers)));
+		return produceOne(just(StreamableEntity.of(topic, key, value, headers)));
 	}
 
-	public Mono<SenderResult<V>> produceOne(Mono<ProduceableEntity<K, V>> entity) {
+	public Mono<SenderResult<V>> produceOne(Mono<StreamableEntity<K, V>> entity) {
 		return produceMany(entity.flux()).single();
 	}
 
-	public Flux<SenderResult<V>> produceMany(Flux<ProduceableEntity<K, V>> entities) {
+	public Flux<SenderResult<V>> produceMany(Flux<StreamableEntity<K, V>> entities) {
 		return entities
 			.map($ -> new ProducerRecord<>($.topic(), null, $.key(), $.value(), $.headers()))
 			.map($ -> create($, $.value()))
@@ -61,7 +61,8 @@ public class ReactiveKafkaProducer<K, V> implements AutoCloseable, DisposableBea
 	}
 
 	private Flux<SenderResult<V>> produce(Publisher<? extends SenderRecord<K, V, V>> records) {
-		return requireNonNull(producer).send(records)
+		return requireNonNull(producer)
+			.send(records)
 			.subscribeOn(boundedElastic())
 			.doOnError(e -> log.error(e.getMessage(), e))
 			.retryWhen(max(3l).transientErrors(true));
