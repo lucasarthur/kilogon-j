@@ -1,13 +1,18 @@
 package com.kilogon.kafka;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.Objects.isNull;
 import static reactor.core.publisher.Mono.empty;
 import static reactor.core.scheduler.Schedulers.boundedElastic;
 import static reactor.util.retry.Retry.max;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import org.apache.kafka.common.serialization.Deserializer;
+import org.apache.kafka.common.serialization.LongDeserializer;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.stereotype.Component;
 
 import com.kilogon.kafka.entity.ConsumableEntity;
@@ -21,12 +26,13 @@ import reactor.kafka.receiver.KafkaReceiver;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class ReactiveKafkaConsumer<K, V> {
+public class ReactiveKafkaConsumer<K, V> implements AutoCloseable, DisposableBean {
+  private final AtomicBoolean canceled = new AtomicBoolean(false);
   private final KafkaUtils utils;
   private KafkaReceiver<K, V> consumer;
 
   public ReactiveKafkaConsumer<K, V> with(Deserializer<K> keyDeserializer, String... topics) {
-		consumer = utils.consumer(keyDeserializer, topics);
+		if (isNull(consumer)) consumer = utils.consumer(keyDeserializer, topics);
 		return this;
 	}
 
@@ -34,9 +40,10 @@ public class ReactiveKafkaConsumer<K, V> {
     consume().doOnNext(action).subscribe();
   }
 
-  private Flux<ConsumableEntity<K, V>> consume() {
+  public Flux<ConsumableEntity<K, V>> consume() {
     return requireNonNull(consumer)
       .receive()
+      .takeUntil($ -> canceled.get())
       .subscribeOn(boundedElastic())
       .map(utils::ack)
       .map(ConsumableEntity::of)
@@ -45,4 +52,17 @@ public class ReactiveKafkaConsumer<K, V> {
       .onErrorResume($ -> empty())
       .repeat();
   }
+
+  public void stop() {
+    if (!isNull(consumer)) {
+      canceled.compareAndSet(false, true);
+      consumer = null;
+    }
+  }
+
+	@Override public void destroy() { stop(); }
+	@Override public void close() { stop(); }
+
+  public Deserializer<String> stringKeys() { return new StringDeserializer(); }
+	public Deserializer<Long> longKeys() { return new LongDeserializer(); }
 }

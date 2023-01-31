@@ -9,7 +9,9 @@ import static reactor.util.retry.Retry.max;
 
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.header.Headers;
+import org.apache.kafka.common.serialization.LongSerializer;
 import org.apache.kafka.common.serialization.Serializer;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.reactivestreams.Publisher;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.stereotype.Component;
@@ -33,7 +35,7 @@ public class ReactiveKafkaProducer<K, V> implements AutoCloseable, DisposableBea
   private KafkaSender<K, V> producer;
 
 	public ReactiveKafkaProducer<K, V> with(Serializer<K> keySerializer) {
-		producer = utils.producer(keySerializer);
+		if (isNull(producer)) producer = utils.producer(keySerializer);
 		return this;
 	}
 
@@ -67,7 +69,16 @@ public class ReactiveKafkaProducer<K, V> implements AutoCloseable, DisposableBea
 			.retryWhen(max(3l).transientErrors(true));
 	}
 
-	private void doClose() { if (!isNull(producer)) producer.close(); }
-	@Override public void destroy() { doClose(); }
-	@Override public void close() { doClose(); }
+	private void _close() {
+		if (!isNull(producer)) {
+			producer.close();
+			producer = null;
+		}
+	}
+
+	@Override public void destroy() { _close(); }
+	@Override public void close() { _close(); }
+
+	public Serializer<String> stringKeys() { return new StringSerializer(); }
+	public Serializer<Long> longKeys() { return new LongSerializer(); }
 }
